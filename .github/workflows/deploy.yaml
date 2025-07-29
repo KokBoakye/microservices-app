@@ -1,0 +1,48 @@
+name: Build and Deploy to EKS
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  ACCOUNT_ID: 914559461558
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REGISTRY: 914559461558.dkr.ecr.eu-north-1.amazonaws.com
+  SERVICES: frontend cartservice checkoutservice productcatalogservice recommendationservice currencyservice emailservice paymentservice shippingservice adservice
+
+jobs:
+  build_and_deploy:
+    name: Build, Push, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build and Push Docker Images
+      run: |
+        for service in $SERVICES; do
+          echo "---------------------------"
+          echo "Building and pushing $service"
+          IMAGE_NAME=$ECR_REGISTRY/$service:latest
+          docker build -t $IMAGE_NAME ./src/$service
+          docker push $IMAGE_NAME
+        done
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+    - name: Deploy to EKS
+      run: |
+        kubectl apply -f release/
