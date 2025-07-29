@@ -8,7 +8,7 @@ env:
   ACCOUNT_ID: 914559461558
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REGISTRY: 914559461558.dkr.ecr.eu-north-1.amazonaws.com
-  SERVICES: frontend cartservice checkoutservice productcatalogservice recommendationservice currencyservice emailservice paymentservice shippingservice adservice
+  SERVICES: frontend checkoutservice productcatalogservice recommendationservice currencyservice emailservice paymentservice shippingservice adservice #cartservice
 
 jobs:
   build_and_deploy:
